@@ -4,7 +4,7 @@ import Head from 'next/head'
 
 export default function Home() {
   return (
-    <main className="container mx-auto my-6">
+    <main className="container mx-auto flex h-screen max-h-[1080px] flex-col items-center justify-center">
       <Head>
         <title>SDF Playground</title>
       </Head>
