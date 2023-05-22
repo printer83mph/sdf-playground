@@ -15,7 +15,6 @@
     "@types/react": "18.0.38",
     "@types/react-dom": "18.0.11",
     "autoprefixer": "10.4.14",
-    "eslint": "8.39.0",
     "eslint-config-next": "13.3.1",
     "next": "13.3.1",
     "postcss": "8.4.23",
@@ -25,8 +24,16 @@
     "typescript": "5.0.4"
   },
   "devDependencies": {
+    "eslint": "8.39.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.25.3",
+    "eslint-plugin-jsx-a11y": "^6.5.1",
+    "eslint-plugin-react": "^7.28.0",
+    "eslint-plugin-react-hooks": "^4.3.0",
+    "eslint-plugin-unicorn": "^47.0.0",
     "gl-matrix": "^3.4.3",
     "prettier": "^2.8.8",
+    "prettier-plugin-glsl": "^0.0.10",
     "prettier-plugin-tailwindcss": "^0.2.7",
     "raw-loader": "^4.0.2"
   }

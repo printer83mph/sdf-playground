@@ -5,8 +5,8 @@ import type { GroupNode } from '@/lib/sdf-node'
 import { GLInfo, setupGL } from '@/lib/webgl'
 
 export default function SdfCanvas({ root }: { root: GroupNode }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null!)
-  const references = useRef<GLInfo>(null!)
+  const canvasRef = useRef<HTMLCanvasElement>(undefined!)
+  const references = useRef<GLInfo>(undefined!)
 
   // initial setup
   useEffect(() => {
@@ -28,7 +28,6 @@ export default function SdfCanvas({ root }: { root: GroupNode }) {
   useEffect(() => {
     const encodedScene = encode(root)
     references.current.setScene(encodedScene)
-    console.log('new scene:', encodedScene)
   }, [root])
 
   return <canvas ref={canvasRef} width={800} height={600} />

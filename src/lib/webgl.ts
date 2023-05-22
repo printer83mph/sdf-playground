@@ -1,7 +1,7 @@
 import { mat4 } from 'gl-matrix'
 
-import vertexSource from '@/glsl/sdf.vert'
 import fragmentSource from '@/glsl/sdf.frag'
+import vertexSource from '@/glsl/sdf.vert'
 
 function createShader(gl: WebGL2RenderingContext, sourceCode: string, type: number) {
   // Compiles either a shader of type gl.VERTEX_SHADER or gl.FRAGMENT_SHADER
@@ -86,11 +86,13 @@ export function setupGL(gl: WebGL2RenderingContext) {
   const setScene = (scene: mat4[]) => {
     // TODO: do we really want 100 node limit? maybe 1000? man...
     const array = new Float32Array(100 * 16)
+    // eslint-disable-next-line unicorn/no-array-for-each
     scene.forEach((matrix, idx) => {
       for (let i = 0; i < 16; i++) {
         array[idx + i] = matrix[i]
       }
     })
+    // eslint-enable
     gl.uniformMatrix4fv(uniformLocations.scene, false, array)
   }
 
