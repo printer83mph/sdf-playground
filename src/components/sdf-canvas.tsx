@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 
+import useMouseControls from '@/hooks/use-mouse-controls'
 import encode from '@/lib/encode'
 import type { GroupNode } from '@/lib/sdf-node'
 import { GLInfo, setupGL } from '@/lib/webgl'
@@ -24,6 +25,14 @@ export default function SdfCanvas({ root }: { root: GroupNode }) {
       cancelAnimationFrame(frameRequestId)
     }
   }, [])
+
+  useMouseControls({
+    canvasRef,
+    dragButtons: [0, 1, 2],
+    onDrag(button, dist) {
+      console.log('dragged', button, 'by', dist)
+    },
+  })
 
   useEffect(() => {
     const encodedScene = encode(root)
