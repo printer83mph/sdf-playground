@@ -55,9 +55,7 @@ const encodeMap: { [key in NodeType]: (node: SdfNode) => mat4[] } = {
     ]
   },
   // shape: last index is 1
-  shape: (node) => [
-    encodeShapeMap[(node as ShapeNode).shape](node as ShapeNode),
-  ],
+  shape: (node) => [encodeShapeMap[(node as ShapeNode).shape](node as ShapeNode)],
 }
 
 const encodeShapeMap: { [key in ShapeType]: (node: ShapeNode) => mat4 } = {

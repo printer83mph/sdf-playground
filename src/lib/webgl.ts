@@ -3,11 +3,7 @@ import { mat4 } from 'gl-matrix'
 import vertexSource from '@/glsl/sdf.vert'
 import fragmentSource from '@/glsl/sdf.frag'
 
-function createShader(
-  gl: WebGL2RenderingContext,
-  sourceCode: string,
-  type: number
-) {
+function createShader(gl: WebGL2RenderingContext, sourceCode: string, type: number) {
   // Compiles either a shader of type gl.VERTEX_SHADER or gl.FRAGMENT_SHADER
   const shader = gl.createShader(type)!
   gl.shaderSource(shader, sourceCode)
