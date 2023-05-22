@@ -40,7 +40,7 @@ export function setupGL(gl: WebGL2RenderingContext) {
   }
 
   const uniformLocations = {
-    proj: gl.getUniformLocation(program, 'u_Proj'),
+    camera: gl.getUniformLocation(program, 'u_Camera'),
     scene: gl.getUniformLocation(program, 'u_Scene'),
   }
 
@@ -70,9 +70,9 @@ export function setupGL(gl: WebGL2RenderingContext) {
     Float32Array.from(
       [
         [0, 0],
-        [1, 0],
-        [1, 1],
         [0, 1],
+        [1, 1],
+        [1, 0],
       ].flat()
     ),
     gl.STATIC_DRAW
@@ -80,8 +80,9 @@ export function setupGL(gl: WebGL2RenderingContext) {
   gl.vertexAttribPointer(attribLocations.uv, 2, gl.FLOAT, false, 0, 0)
   gl.enableVertexAttribArray(attribLocations.uv)
 
-  // set uniform proj matrix
-  gl.uniformMatrix4fv(uniformLocations.proj, false, mat4.create())
+  const setCameraMatrix = (mat: mat4) => {
+    gl.uniformMatrix4fv(uniformLocations.camera, false, mat)
+  }
 
   const setScene = (scene: mat4[]) => {
     // TODO: do we really want 100 node limit? maybe 1000? man...
@@ -103,7 +104,7 @@ export function setupGL(gl: WebGL2RenderingContext) {
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4)
   }
 
-  return { gl, program, attribLocations, uniformLocations, setScene, draw }
+  return { gl, program, attribLocations, uniformLocations, setCameraMatrix, setScene, draw }
 }
 
 export type GLInfo = ReturnType<typeof setupGL>
