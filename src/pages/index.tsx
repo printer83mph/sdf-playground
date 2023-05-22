@@ -1,3 +1,5 @@
+import SdfCanvas from '@/components/sdf-canvas'
+import { CreateGroupNode, CreateSphereNode } from '@/lib/sdf-node'
 import Head from 'next/head'
 
 export default function Home() {
@@ -6,7 +8,7 @@ export default function Home() {
       <Head>
         <title>SDF Playground</title>
       </Head>
-      You had been trolled
+      <SdfCanvas root={CreateGroupNode([CreateSphereNode(1)])} />
     </main>
   )
 }
