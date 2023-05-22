@@ -10,8 +10,8 @@ import type {
   TransformNode,
 } from './sdf-node'
 
-export default function encode(root: GroupNode) {
-  return encodeMap['group'](root)
+export default function encode(node: SdfNode) {
+  return encodeMap[node.type](node)
 }
 
 // marker for when a group "begins"
@@ -37,9 +37,7 @@ const encodeMap: { [key in NodeType]: (node: SdfNode) => mat4[] } = {
   group: (node) => {
     return [
       groupBeginMat4,
-      ...(node as GroupNode).children.flatMap((child) =>
-        encodeMap[child.type](child)
-      ),
+      ...(node as GroupNode).children.flatMap((child) => encode(child)),
       groupEndMat4,
     ]
   },

@@ -88,7 +88,8 @@ export function setupGL(gl: WebGL2RenderingContext) {
   gl.uniformMatrix4fv(uniformLocations.proj, false, mat4.create())
 
   const setScene = (scene: mat4[]) => {
-    const array = new Float32Array(scene.length * 16)
+    // TODO: do we really want 100 node limit? maybe 1000? man...
+    const array = new Float32Array(100 * 16)
     scene.forEach((matrix, idx) => {
       for (let i = 0; i < 16; i++) {
         array[idx + i] = matrix[i]

@@ -12,18 +12,23 @@ export default function SdfCanvas({ root }: { root: GroupNode }) {
   useEffect(() => {
     const gl = canvasRef.current.getContext('webgl2')!
     references.current = setupGL(gl)
+    let frameRequestId: number
 
     const drawLoop = () => {
       references.current.draw()
-      requestAnimationFrame(drawLoop)
+      frameRequestId = requestAnimationFrame(drawLoop)
     }
+    frameRequestId = requestAnimationFrame(drawLoop)
 
-    requestAnimationFrame(drawLoop)
+    return () => {
+      cancelAnimationFrame(frameRequestId)
+    }
   }, [])
 
   useEffect(() => {
     const encodedScene = encode(root)
     references.current.setScene(encodedScene)
+    console.log('new scene:', encodedScene)
   }, [root])
 
   return <canvas ref={canvasRef} width={800} height={600} />
