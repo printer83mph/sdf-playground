@@ -25,9 +25,9 @@
     "typescript": "5.0.4"
   },
   "devDependencies": {
-    "@types/gl-matrix": "^3.2.0",
     "gl-matrix": "^3.4.3",
     "prettier": "^2.8.8",
-    "prettier-plugin-tailwindcss": "^0.2.7"
+    "prettier-plugin-tailwindcss": "^0.2.7",
+    "raw-loader": "^4.0.2"
   }
 }

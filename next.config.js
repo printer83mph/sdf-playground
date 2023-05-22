@@ -4,7 +4,7 @@ const nextConfig = {
   webpack: (config) => {
     config.module.rules.push({
       test: /\.(frag|vert)$/,
-      type: 'asset/source',
+      use: 'raw-loader',
     })
     return config
   },

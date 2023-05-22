@@ -1,8 +1,7 @@
-import {
-  vert as vertexSource,
-  frag as fragmentSource,
-} from '@/glsl/sdf-shaders'
 import { mat4 } from 'gl-matrix'
+
+import vertexSource from '@/glsl/sdf.vert'
+import fragmentSource from '@/glsl/sdf.frag'
 
 function createShader(
   gl: WebGL2RenderingContext,
