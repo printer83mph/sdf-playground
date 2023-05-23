@@ -1,7 +1,7 @@
 #version 300 es
 precision highp float;
 
-#define FLT_MAX 3.402823466e+38
+#define FLT_MAX (3.402823466e38)
 
 uniform mat4 u_Camera;
 uniform mat4 u_Scene[100];
@@ -10,41 +10,29 @@ in vec2 fs_UV;
 
 out vec4 fragColor;
 
-const float FOV_Y = 3.1415 / 3.;
-const float TAN_ALPHA = tan(FOV_Y / 2.);
+const float FOV_Y = 3.1415 / 3.0;
+const float TAN_ALPHA = tan(FOV_Y / 2.0);
 
-const float ASPECT = 4. / 3.;
+const float ASPECT = 4.0 / 3.0;
 
 // --- UTIL ---
 
 mat3 rotateX(float rad) {
   float c = cos(rad);
   float s = sin(rad);
-  return mat3(
-    1., 0., 0.,
-    0., c, s,
-    0., -s, c
-  );
+  return mat3(1.0, 0.0, 0.0, 0.0, c, s, 0.0, -s, c);
 }
 
 mat3 rotateY(float rad) {
   float c = cos(rad);
   float s = sin(rad);
-  return mat3(
-    c, 0., -s,
-    0., 1., 0.,
-    s, 0., c
-  );
+  return mat3(c, 0.0, -s, 0.0, 1.0, 0.0, s, 0.0, c);
 }
 
 mat3 rotateZ(float rad) {
   float c = cos(rad);
   float s = sin(rad);
-  return mat3(
-    c, s, 0.,
-    -s, c, 0.,
-    0., 0., 1.
-  );
+  return mat3(c, s, 0.0, -s, c, 0.0, 0.0, 0.0, 1.0);
 }
 
 struct Ray {
@@ -53,7 +41,7 @@ struct Ray {
 };
 
 Ray getRay() {
-  vec2 ndcCoords = fs_UV * 2. - 1.;
+  vec2 ndcCoords = fs_UV * 2.0 - 1.0;
 
   vec3 rayOrigin = vec3(u_Camera * vec4(0, 0, 0, 1));
 
@@ -80,7 +68,7 @@ float sdfSphere(vec3 query, float radius) {
 
 float sdfShape(inout vec3 query, inout mat4 shapeMatrix) {
   // sphere
-  if (abs(shapeMatrix[2][3] - 0.) < 0.01) {
+  if (abs(shapeMatrix[2][3] - 0.0) < 0.01) {
     // radius is at 0, 0
     return sdfSphere(query, shapeMatrix[0][0]);
   }
@@ -96,7 +84,7 @@ struct LocalQueryState {
 };
 
 LocalQueryState defaultLocalState(vec3 query) {
-  return LocalQueryState(query, vec3(1.));
+  return LocalQueryState(query, vec3(1.0));
 }
 
 // this gets modified only if we find a smaller distance
@@ -107,25 +95,25 @@ struct GlobalQueryState {
 };
 
 GlobalQueryState defaultGlobalState() {
-  return GlobalQueryState(0, FLT_MAX, vec3(1.));
+  return GlobalQueryState(0, FLT_MAX, vec3(1.0));
 }
 
-#define GROUP_BEGIN_MATRIX -1.
-#define GROUP_END_MATRIX -2.
-#define END_MATRIX 0.
-#define SHAPE_MATRIX 1.
-#define TRANSFORM_MATRIX 2.
+#define GROUP_BEGIN_MATRIX (-1.0)
+#define GROUP_END_MATRIX (-2.0)
+#define END_MATRIX (0.0)
+#define SHAPE_MATRIX (1.0)
+#define TRANSFORM_MATRIX (2.0)
 
 // TODO: crucial that we keep maximum stack size down for performance
-#define STACK_SIZE 3
-#define FLOAT_THRESHOLD 0.01
+#define STACK_SIZE (3)
+#define FLOAT_THRESHOLD (0.01)
 
 GlobalQueryState sdf(vec3 query) {
   GlobalQueryState globalState = defaultGlobalState();
   LocalQueryState stack[STACK_SIZE];
   stack[0] = defaultLocalState(query);
   int stackIdx = 0;
-  
+
   while (globalState.index < 100) {
     globalState.color.b += 0.01;
     mat4 currentMatrixCopy = u_Scene[globalState.index];
@@ -135,23 +123,19 @@ GlobalQueryState sdf(vec3 query) {
     // full stop end marker
     if (abs(matType - END_MATRIX) < FLOAT_THRESHOLD) {
       break;
-    }
-    // group begin marker
+    } // group begin marker
     else if (abs(matType - GROUP_BEGIN_MATRIX) < FLOAT_THRESHOLD) {
       // add copy on top of stack
       stack[stackIdx + 1] = stack[stackIdx];
       ++stackIdx;
       continue;
-    }
-    // group end marker
+    } // group end marker
     else if (abs(matType - GROUP_END_MATRIX) < FLOAT_THRESHOLD) {
       // decrease stack
       --stackIdx;
       continue;
-    }
-    // shape matrix
+    } // shape matrix
     else if (abs(matType - SHAPE_MATRIX) < FLOAT_THRESHOLD) {
-
       float dist = sdfShape(stack[stackIdx].query, currentMatrixCopy);
 
       // check if this shape has priority
@@ -162,12 +146,11 @@ GlobalQueryState sdf(vec3 query) {
       }
 
       continue;
-    }
-    // transform matrix
+    } // transform matrix
     else if (abs(matType - TRANSFORM_MATRIX) < FLOAT_THRESHOLD) {
       vec3 translate = -vec3(currentMatrixCopy[0]);
       vec3 rotate = -vec3(currentMatrixCopy[1]);
-      vec3 scale = 1. / vec3(currentMatrixCopy[2]);
+      vec3 scale = 1.0 / vec3(currentMatrixCopy[2]);
 
       stack[stackIdx].query += translate;
       // TODO: full transform logic... rotate + scale... update query in stack
@@ -179,8 +162,8 @@ GlobalQueryState sdf(vec3 query) {
 
 // --- RAY MARCHING ---
 
-#define SDF_THRESHOLD 0.001
-#define MAX_ITERATIONS 64
+#define SDF_THRESHOLD (0.002)
+#define MAX_ITERATIONS (64)
 
 struct MarchResult {
   bool hit;
@@ -189,7 +172,7 @@ struct MarchResult {
 };
 
 MarchResult rayMarch(Ray ray) {
-  float t = 0.;
+  float t = 0.0;
 
   int iterations = 0;
   do {
@@ -208,7 +191,7 @@ MarchResult rayMarch(Ray ray) {
   } while (++iterations < MAX_ITERATIONS);
 
   // we didn't hit anything
-  return MarchResult(false, 0., vec3(0.));
+  return MarchResult(false, 0.0, vec3(0.0));
 }
 
 vec3 getNormal(vec3 query) {
@@ -216,9 +199,9 @@ vec3 getNormal(vec3 query) {
   vec2 k = vec2(1, -1);
   return normalize(
     k.xyy * sdf(query + k.xyy * h).minDistance +
-    k.yyx * sdf(query + k.yyx * h).minDistance +
-    k.yxy * sdf(query + k.yxy * h).minDistance +
-    k.xxx * sdf(query + k.xxx * h).minDistance
+      k.yyx * sdf(query + k.yyx * h).minDistance +
+      k.yxy * sdf(query + k.yxy * h).minDistance +
+      k.xxx * sdf(query + k.xxx * h).minDistance
   );
 }
 
@@ -226,12 +209,14 @@ void main() {
   Ray ray = getRay();
 
   // default background color
-  vec3 finalColor = vec3(
+  vec3 color = vec3(
     ray.direction[0] / 2. + 1.,
     ray.direction[1] / 2. + 1.,
     ray.direction[2] / 2. + 1.
   );
-  
+  // reverse gamma correct
+  color = pow(color, vec3(2.2));
+
   MarchResult marchResult = rayMarch(ray);
 
   if (marchResult.hit) {
@@ -240,17 +225,17 @@ void main() {
     vec3 nor = getNormal(intersectPoint);
 
     // TODO: move lighting to uniform inputs
-    float directTerm = (dot(nor, vec3(0.5, 0.65, 0.4)) / 2. + 0.5) * 1.8;
-    float ambientTerm = 0.6;
+    float directTerm = pow(dot(nor, normalize(vec3(0.5, 0.65, 0.4))) / 2.0 + 0.5, 2.0) * 3.0;
+    float ambientTerm = 0.3;
 
-    finalColor = marchResult.color * (directTerm + ambientTerm);
+    color = marchResult.color * (directTerm + ambientTerm);
   }
 
   // reinhard-jodie operator
-  float luminance = dot(finalColor, vec3(0.2126, 0.7152, 0.0722));
-  vec3 tColor = finalColor / (vec3(1.) + finalColor);
-  vec3 tonemappedColor = mix(finalColor / (vec3(1.) + luminance), tColor, tColor);
+  float luminance = dot(color, vec3(0.2126, 0.7152, 0.0722));
+  vec3 tColor = color / (vec3(1.0) + color);
+  vec3 tonemappedColor = mix(color / (vec3(1.0) + luminance), tColor, tColor);
 
   // gamma correction
-  fragColor = vec4(pow(tonemappedColor, vec3(1. / 2.2)), 1.);
+  fragColor = vec4(pow(tonemappedColor, vec3(1.0 / 2.2)), 1.0);
 }
