@@ -5,7 +5,7 @@ export default class OrbitControls {
   target = vec3.create()
   yaw = 0
   pitch = 0
-  distance = 1
+  distance = 2
 
   viewTransform = mat4.create()
   rotation = quat.fromEuler(quat.create(), this.pitch, this.yaw, 0)
@@ -23,8 +23,9 @@ export default class OrbitControls {
     vec3.transformQuat(this.eye, this.eye, this.rotation)
     vec3.add(this.eye, this.eye, this.target)
 
-    // TODO: may have to invert
     mat4.fromRotationTranslationScale(this.viewTransform, this.rotation, this.eye, [1, 1, 1])
+    const lol = vec3.fromValues(0, 0, -1)
+    vec3.transformQuat(lol, lol, this.rotation)
   }
 
   addPitch(rad: number) {
@@ -40,7 +41,6 @@ export default class OrbitControls {
   }
 
   moveTargetLocal(dist: ReadonlyVec3) {
-    // TODO: may have to invert
     const localDist = vec3.transformQuat(vec3.create(), dist, this.rotation)
     vec3.add(this.target, this.target, localDist)
   }

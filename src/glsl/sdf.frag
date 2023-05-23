@@ -1,6 +1,8 @@
 #version 300 es
 precision highp float;
 
+#define FLT_MAX 3.402823466e+38
+
 uniform mat4 u_Camera;
 uniform mat4 u_Scene[100];
 
@@ -8,13 +10,50 @@ in vec2 fs_UV;
 
 out vec4 fragColor;
 
-const float FOV_Y = 3.14f / 2.f;
-const float TAN_ALPHA = tan(FOV_Y / 2.f);
+const float FOV_Y = 3.1415 / 3.;
+const float TAN_ALPHA = tan(FOV_Y / 2.);
 
-const float ASPECT = 4.f / 3.f;
+const float ASPECT = 4. / 3.;
 
-void main() {
-  vec2 ndcCoords = fs_UV * 2.f - 1.f;
+// --- UTIL ---
+
+mat3 rotateX(float rad) {
+  float c = cos(rad);
+  float s = sin(rad);
+  return mat3(
+    1., 0., 0.,
+    0., c, s,
+    0., -s, c
+  );
+}
+
+mat3 rotateY(float rad) {
+  float c = cos(rad);
+  float s = sin(rad);
+  return mat3(
+    c, 0., -s,
+    0., 1., 0.,
+    s, 0., c
+  );
+}
+
+mat3 rotateZ(float rad) {
+  float c = cos(rad);
+  float s = sin(rad);
+  return mat3(
+    c, s, 0.,
+    -s, c, 0.,
+    0., 0., 1.
+  );
+}
+
+struct Ray {
+  vec3 origin;
+  vec3 direction;
+};
+
+Ray getRay() {
+  vec2 ndcCoords = fs_UV * 2. - 1.;
 
   vec3 rayOrigin = vec3(u_Camera * vec4(0, 0, 0, 1));
 
@@ -30,10 +69,165 @@ void main() {
 
   vec3 rayDirection = normalize(p - rayOrigin);
 
+  return Ray(rayOrigin, rayDirection);
+}
+
+// --- SDF FUNCTIONS ---
+
+float sdfSphere(vec3 query, float radius) {
+  return length(query) - radius;
+}
+
+float sdfShape(inout vec3 query, inout mat4 shapeMatrix) {
+  // sphere
+  if (abs(shapeMatrix[2][3] - 0.) < 0.01) {
+    // radius is at 0, 0
+    return sdfSphere(query, shapeMatrix[0][0]);
+  }
+  return FLT_MAX;
+}
+
+// --- MAIN SDF FUNCTION ---
+
+// this gets "pushed" and "popped" (multiple exist on stack)
+struct LocalQueryState {
+  vec3 query;
+  vec3 color; // current color (closest indexed guy)
+};
+
+LocalQueryState defaultLocalState(vec3 query) {
+  return LocalQueryState(query, vec3(1.));
+}
+
+// this gets modified only if we find a smaller distance
+struct GlobalQueryState {
+  int index; // index to query next
+  float minDistance;
+  vec3 color;
+};
+
+GlobalQueryState defaultGlobalState() {
+  return GlobalQueryState(0, FLT_MAX, vec3(1.));
+}
+
+#define GROUP_BEGIN_MATRIX -1.
+#define GROUP_END_MATRIX -2.
+#define END_MATRIX 0.
+#define SHAPE_MATRIX 1.
+#define TRANSFORM_MATRIX 2.
+
+#define FLOAT_THRESHOLD 0.01
+
+GlobalQueryState sdf(vec3 query) {
+  GlobalQueryState globalState = defaultGlobalState();
+  LocalQueryState stack[50];
+  stack[0] = defaultLocalState(query);
+  int stackIdx = 0;
+  
+  while (globalState.index < 100) {
+    globalState.color.b += 0.01;
+    mat4 currentMatrixCopy = u_Scene[globalState.index];
+    globalState.index++;
+
+    // fetch current query state
+    LocalQueryState localState = stack[stackIdx];
+
+    float matType = currentMatrixCopy[3][3];
+    // full stop end marker
+    if (abs(matType - END_MATRIX) < FLOAT_THRESHOLD) {
+      break;
+    }
+    // group begin marker
+    else if (abs(matType - GROUP_BEGIN_MATRIX) < FLOAT_THRESHOLD) {
+      // add copy on top of stack
+      stack[stackIdx + 1] = stack[stackIdx];
+      ++stackIdx;
+      continue;
+    }
+    // group end marker
+    else if (abs(matType - GROUP_END_MATRIX) < FLOAT_THRESHOLD) {
+      // decrease stack
+      --stackIdx;
+      continue;
+    }
+    // shape matrix
+    else if (abs(matType - SHAPE_MATRIX) < FLOAT_THRESHOLD) {
+
+      float dist = sdfShape(localState.query, currentMatrixCopy);
+
+      // check if this shape has priority
+      if (dist <= globalState.minDistance) {
+        // copy stuff from local state to global
+        globalState.minDistance = dist;
+        globalState.color = localState.color;
+      }
+
+      continue;
+    }
+    // transform matrix
+    else if (abs(matType - TRANSFORM_MATRIX) < FLOAT_THRESHOLD) {
+      vec3 translate = -vec3(currentMatrixCopy[0]);
+      vec3 rotate = -vec3(currentMatrixCopy[1]);
+      vec3 scale = 1. / vec3(currentMatrixCopy[2]);
+
+      mat4 translateMat = mat4(mat3(1.));
+      translateMat[3] = vec4(translate, 1.);
+
+      // TODO: full transform logic... update query in stack
+    }
+  }
+
+  return globalState;
+}
+
+// --- RAY MARCHING ---
+
+#define SDF_THRESHOLD 0.01
+#define MAX_ITERATIONS 16
+
+struct MarchResult {
+  bool hit;
+  float t;
+  vec3 color;
+};
+
+MarchResult rayMarch(Ray ray) {
+  float t = 0.;
+
+  int iterations = 0;
+  do {
+    vec3 samplePoint = ray.origin + t * ray.direction;
+    GlobalQueryState finalQueryState = sdf(samplePoint);
+
+    float maxMarchDist = finalQueryState.minDistance;
+    // float maxMarchDist = sdfSphere(samplePoint, 0.5);
+
+    if (maxMarchDist < SDF_THRESHOLD) {
+      return MarchResult(true, t, finalQueryState.color);
+    }
+
+    t += maxMarchDist + SDF_THRESHOLD;
+
+  } while (++iterations < MAX_ITERATIONS);
+
+  // we didn't hit anything
+  return MarchResult(false, 0., vec3(0.));
+}
+
+void main() {
+  Ray ray = getRay();
+
+  // default background color
   fragColor = vec4(
-    rayDirection[0] / 2.f + 1.f,
-    rayDirection[1] / 2.f + 1.f,
-    rayDirection[2] / 2.f + 1.f,
-    1.f
+    ray.direction[0] / 2. + 1.,
+    ray.direction[1] / 2. + 1.,
+    ray.direction[2] / 2. + 1.,
+    1.
   );
+  
+  MarchResult marchResult = rayMarch(ray);
+
+  if (marchResult.hit) {
+    fragColor = vec4(marchResult.color, 1.);
+  }
 }

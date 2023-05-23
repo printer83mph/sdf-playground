@@ -90,9 +90,10 @@ export function setupGL(gl: WebGL2RenderingContext) {
     // eslint-disable-next-line unicorn/no-array-for-each
     scene.forEach((matrix, idx) => {
       for (let i = 0; i < 16; i++) {
-        array[idx + i] = matrix[i]
+        array[idx * 16 + i] = matrix[i]
       }
     })
+    console.log(array)
     // eslint-enable
     gl.uniformMatrix4fv(uniformLocations.scene, false, array)
   }

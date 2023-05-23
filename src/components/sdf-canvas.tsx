@@ -17,8 +17,10 @@ export default function SdfCanvas({ root }: { root: GroupNode }) {
 
     const gl = canvasRef.current.getContext('webgl2')!
     glReferences.current = setupGL(gl)
-    let frameRequestId: number
 
+    glReferences.current.setCameraMatrix(orbitControls.current.viewTransform)
+
+    let frameRequestId: number
     const drawLoop = () => {
       glReferences.current.draw()
       frameRequestId = requestAnimationFrame(drawLoop)
@@ -36,16 +38,16 @@ export default function SdfCanvas({ root }: { root: GroupNode }) {
     onDrag(button, [dx, dy]) {
       switch (button) {
         case 0: {
-          orbitControls.current.addDistance(dy * 0.1)
+          orbitControls.current.addPitch(-dy * 0.3)
+          orbitControls.current.addYaw(-dx * 0.3)
           break
         }
         case 1: {
-          orbitControls.current.moveTargetLocal([dx * 0.01, dy * 0.01, 0])
+          orbitControls.current.moveTargetLocal([-dx * 0.005, dy * 0.005, 0])
           break
         }
         case 2: {
-          orbitControls.current.addPitch(dy * 0.1)
-          orbitControls.current.addYaw(dx * 0.1)
+          orbitControls.current.addDistance(-dy * 0.01)
           break
         }
         default: {
@@ -61,6 +63,7 @@ export default function SdfCanvas({ root }: { root: GroupNode }) {
   useEffect(() => {
     const encodedScene = encode(root)
     glReferences.current.setScene(encodedScene)
+    console.log(encodedScene)
   }, [root])
 
   return <canvas ref={canvasRef} width={800} height={600} />

@@ -10,8 +10,18 @@ import type {
   TransformNode,
 } from './sdf-node'
 
+// prettier-ignore
+const endMarkerMat4 = mat4.fromValues(
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+)
+
 export default function encode(node: SdfNode) {
-  return encodeMap[node.type](node)
+  const matrices = encodeMap[node.type](node)
+  matrices.push(endMarkerMat4)
+  return matrices
 }
 
 // marker for when a group "begins"
@@ -37,20 +47,20 @@ const encodeMap: { [key in NodeType]: (node: SdfNode) => mat4[] } = {
   group: (node) => {
     return [
       groupBeginMat4,
-      ...(node as GroupNode).children.flatMap((child) => encode(child)),
+      ...(node as GroupNode).children.flatMap((child) => encodeMap[child.type](child)),
       groupEndMat4,
     ]
   },
-  // transform: last index is 0
+  // transform: last index is 2
   transform: (node) => {
     const { translate, rotate, scale } = node as TransformNode
     // prettier-ignore
     return [
       mat4.fromValues(
-        translate[0], translate[1], translate[2], 0,
-        rotate[0], rotate[1], rotate[2], 0,
-        scale[0], scale[1], scale[2], 0,
-        0, 0, 0, 0
+        translate[0], rotate[0], scale[0], 0,
+        translate[1], rotate[1], scale[1], 0,
+        translate[2], rotate[2], scale[2], 0,
+        0, 0, 0, 2
       )
     ]
   },
@@ -66,7 +76,7 @@ const encodeShapeMap: { [key in ShapeType]: (node: ShapeNode) => mat4 } = {
       (node as SphereNode).radius, 0, 0, 0,
       0, 0, 0, 0,
       0, 0, 0, 0,
-      0, 0, 0, 2,
+      0, 0, 0, 1,
     )
   },
 }
