@@ -93,7 +93,6 @@ export function setupGL(gl: WebGL2RenderingContext) {
         array[idx * 16 + i] = matrix[i]
       }
     })
-    console.log(array)
     // eslint-enable
     gl.uniformMatrix4fv(uniformLocations.scene, false, array)
   }

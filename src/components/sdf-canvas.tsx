@@ -63,7 +63,6 @@ export default function SdfCanvas({ root }: { root: GroupNode }) {
   useEffect(() => {
     const encodedScene = encode(root)
     glReferences.current.setScene(encodedScene)
-    console.log(encodedScene)
   }, [root])
 
   return <canvas ref={canvasRef} width={800} height={600} />

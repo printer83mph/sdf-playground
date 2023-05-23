@@ -19,7 +19,7 @@ const endMarkerMat4 = mat4.fromValues(
 )
 
 export default function encode(node: SdfNode) {
-  const matrices = encodeMap[node.type](node)
+  const matrices = (node as GroupNode).children.flatMap((child) => encodeMap[child.type](child))
   matrices.push(endMarkerMat4)
   return matrices
 }
@@ -57,9 +57,9 @@ const encodeMap: { [key in NodeType]: (node: SdfNode) => mat4[] } = {
     // prettier-ignore
     return [
       mat4.fromValues(
-        translate[0], rotate[0], scale[0], 0,
-        translate[1], rotate[1], scale[1], 0,
-        translate[2], rotate[2], scale[2], 0,
+        translate[0], translate[1], translate[2], 0,
+        rotate[0], rotate[1], rotate[2], 0,
+        scale[0], scale[1], scale[2], 0,
         0, 0, 0, 2
       )
     ]

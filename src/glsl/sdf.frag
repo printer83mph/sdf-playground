@@ -116,12 +116,13 @@ GlobalQueryState defaultGlobalState() {
 #define SHAPE_MATRIX 1.
 #define TRANSFORM_MATRIX 2.
 
+// TODO: crucial that we keep maximum stack size down for performance
+#define STACK_SIZE 3
 #define FLOAT_THRESHOLD 0.01
 
 GlobalQueryState sdf(vec3 query) {
   GlobalQueryState globalState = defaultGlobalState();
-  // TODO: crucial that we keep maximum stack size down for performance
-  LocalQueryState stack[5];
+  LocalQueryState stack[STACK_SIZE];
   stack[0] = defaultLocalState(query);
   int stackIdx = 0;
   
@@ -129,9 +130,6 @@ GlobalQueryState sdf(vec3 query) {
     globalState.color.b += 0.01;
     mat4 currentMatrixCopy = u_Scene[globalState.index];
     globalState.index++;
-
-    // fetch current query state
-    LocalQueryState localState = stack[stackIdx];
 
     float matType = currentMatrixCopy[3][3];
     // full stop end marker
@@ -154,13 +152,13 @@ GlobalQueryState sdf(vec3 query) {
     // shape matrix
     else if (abs(matType - SHAPE_MATRIX) < FLOAT_THRESHOLD) {
 
-      float dist = sdfShape(localState.query, currentMatrixCopy);
+      float dist = sdfShape(stack[stackIdx].query, currentMatrixCopy);
 
       // check if this shape has priority
       if (dist <= globalState.minDistance) {
         // copy stuff from local state to global
         globalState.minDistance = dist;
-        globalState.color = localState.color;
+        globalState.color = stack[stackIdx].color;
       }
 
       continue;
@@ -171,10 +169,8 @@ GlobalQueryState sdf(vec3 query) {
       vec3 rotate = -vec3(currentMatrixCopy[1]);
       vec3 scale = 1. / vec3(currentMatrixCopy[2]);
 
-      mat4 translateMat = mat4(mat3(1.));
-      translateMat[3] = vec4(translate, 1.);
-
-      // TODO: full transform logic... update query in stack
+      stack[stackIdx].query += translate;
+      // TODO: full transform logic... rotate + scale... update query in stack
     }
   }
 
@@ -184,7 +180,7 @@ GlobalQueryState sdf(vec3 query) {
 // --- RAY MARCHING ---
 
 #define SDF_THRESHOLD 0.001
-#define MAX_ITERATIONS 128
+#define MAX_ITERATIONS 64
 
 struct MarchResult {
   bool hit;
@@ -215,6 +211,17 @@ MarchResult rayMarch(Ray ray) {
   return MarchResult(false, 0., vec3(0.));
 }
 
+vec3 getNormal(vec3 query) {
+  float h = 0.00001;
+  vec2 k = vec2(1, -1);
+  return normalize(
+    k.xyy * sdf(query + k.xyy * h).minDistance +
+    k.yyx * sdf(query + k.yyx * h).minDistance +
+    k.yxy * sdf(query + k.yxy * h).minDistance +
+    k.xxx * sdf(query + k.xxx * h).minDistance
+  );
+}
+
 void main() {
   Ray ray = getRay();
 
@@ -229,6 +236,15 @@ void main() {
   MarchResult marchResult = rayMarch(ray);
 
   if (marchResult.hit) {
-    fragColor = vec4(marchResult.color, 1.);
+    vec3 intersectPoint = ray.origin + ray.direction * marchResult.t;
+
+    vec3 nor = getNormal(intersectPoint);
+
+    // TODO: move lighting to uniform inputs
+    float directTerm = (dot(nor, vec3(0.5, 0.65, 0.4)) / 2. + 0.5) * 0.6;
+    float ambientTerm = 0.4;
+
+    float lightingIntensity = pow(directTerm + ambientTerm, 1. / 2.2);
+    fragColor = vec4(marchResult.color * lightingIntensity, 1.);
   }
 }
