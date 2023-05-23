@@ -226,11 +226,10 @@ void main() {
   Ray ray = getRay();
 
   // default background color
-  fragColor = vec4(
+  vec3 finalColor = vec3(
     ray.direction[0] / 2. + 1.,
     ray.direction[1] / 2. + 1.,
-    ray.direction[2] / 2. + 1.,
-    1.
+    ray.direction[2] / 2. + 1.
   );
   
   MarchResult marchResult = rayMarch(ray);
@@ -241,10 +240,17 @@ void main() {
     vec3 nor = getNormal(intersectPoint);
 
     // TODO: move lighting to uniform inputs
-    float directTerm = (dot(nor, vec3(0.5, 0.65, 0.4)) / 2. + 0.5) * 0.6;
-    float ambientTerm = 0.4;
+    float directTerm = (dot(nor, vec3(0.5, 0.65, 0.4)) / 2. + 0.5) * 1.8;
+    float ambientTerm = 0.6;
 
-    float lightingIntensity = pow(directTerm + ambientTerm, 1. / 2.2);
-    fragColor = vec4(marchResult.color * lightingIntensity, 1.);
+    finalColor = marchResult.color * (directTerm + ambientTerm);
   }
+
+  // reinhard-jodie operator
+  float luminance = dot(finalColor, vec3(0.2126, 0.7152, 0.0722));
+  vec3 tColor = finalColor / (vec3(1.) + finalColor);
+  vec3 tonemappedColor = mix(finalColor / (vec3(1.) + luminance), tColor, tColor);
+
+  // gamma correction
+  fragColor = vec4(pow(tonemappedColor, vec3(1. / 2.2)), 1.);
 }
