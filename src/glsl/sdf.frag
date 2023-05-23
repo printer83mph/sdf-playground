@@ -120,7 +120,8 @@ GlobalQueryState defaultGlobalState() {
 
 GlobalQueryState sdf(vec3 query) {
   GlobalQueryState globalState = defaultGlobalState();
-  LocalQueryState stack[50];
+  // TODO: crucial that we keep maximum stack size down for performance
+  LocalQueryState stack[5];
   stack[0] = defaultLocalState(query);
   int stackIdx = 0;
   
@@ -182,8 +183,8 @@ GlobalQueryState sdf(vec3 query) {
 
 // --- RAY MARCHING ---
 
-#define SDF_THRESHOLD 0.01
-#define MAX_ITERATIONS 16
+#define SDF_THRESHOLD 0.001
+#define MAX_ITERATIONS 128
 
 struct MarchResult {
   bool hit;
