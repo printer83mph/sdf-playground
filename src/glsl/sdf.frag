@@ -108,9 +108,8 @@ GlobalQueryState defaultGlobalState() {
 #define STACK_SIZE (3)
 #define FLOAT_THRESHOLD (0.01)
 
-GlobalQueryState sdf(vec3 query) {
+GlobalQueryState sdf(vec3 query, inout LocalQueryState stack[STACK_SIZE]) {
   GlobalQueryState globalState = defaultGlobalState();
-  LocalQueryState stack[STACK_SIZE];
   stack[0] = defaultLocalState(query);
   int stackIdx = 0;
 
@@ -172,12 +171,14 @@ struct MarchResult {
 };
 
 MarchResult rayMarch(Ray ray) {
+  LocalQueryState stack[STACK_SIZE];
+
   float t = 0.0;
 
   int iterations = 0;
   do {
     vec3 samplePoint = ray.origin + t * ray.direction;
-    GlobalQueryState finalQueryState = sdf(samplePoint);
+    GlobalQueryState finalQueryState = sdf(samplePoint, stack);
 
     float maxMarchDist = finalQueryState.minDistance;
     // float maxMarchDist = sdfSphere(samplePoint, 0.5);
@@ -195,13 +196,16 @@ MarchResult rayMarch(Ray ray) {
 }
 
 vec3 getNormal(vec3 query) {
+  LocalQueryState stack[STACK_SIZE];
+
   float h = 0.00001;
   vec2 k = vec2(1, -1);
+
   return normalize(
-    k.xyy * sdf(query + k.xyy * h).minDistance +
-      k.yyx * sdf(query + k.yyx * h).minDistance +
-      k.yxy * sdf(query + k.yxy * h).minDistance +
-      k.xxx * sdf(query + k.xxx * h).minDistance
+    k.xyy * sdf(query + k.xyy * h, stack).minDistance +
+      k.yyx * sdf(query + k.yyx * h, stack).minDistance +
+      k.yxy * sdf(query + k.yxy * h, stack).minDistance +
+      k.xxx * sdf(query + k.xxx * h, stack).minDistance
   );
 }
 
