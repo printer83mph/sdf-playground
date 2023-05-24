@@ -6,61 +6,46 @@ export interface SdfNode {
   type: NodeType;
 }
 
-// --------- --------- --------- ROOT NODE --------- --------- ---------
+// TODO: more BlendModes
+export type BlendMode = { mode: 'union' } | { mode: 'intersect' };
+
+// --------- --------- --------- GROUP NODE --------- --------- ---------
 
 export interface GroupNode extends SdfNode {
   type: 'group';
   children: SdfNode[];
+  translate?: vec3;
+  rotate?: vec3;
+  color?: vec3;
+  blend?: BlendMode;
 }
 
-export function CreateGroupNode(children?: SdfNode[]): GroupNode {
+export function CreateGroupNode(
+  properties: Omit<GroupNode, 'type' | 'children'>,
+  children?: SdfNode[]
+): GroupNode {
   return {
     type: 'group',
     children: children ?? [],
-  };
-}
-
-// --------- --------- --------- TRANSFORM NODE --------- --------- ---------
-
-export interface TransformNode extends SdfNode {
-  type: 'transform';
-  translate: vec3;
-  rotate: vec3;
-  scale: vec3;
-}
-
-export function CreateTransformNode({
-  translate,
-  rotate,
-  scale,
-}: {
-  translate?: vec3;
-  rotate?: vec3;
-  scale?: vec3;
-} = {}): TransformNode {
-  return {
-    type: 'transform',
-    translate: translate ?? [0, 0, 0],
-    rotate: rotate ?? [0, 0, 0],
-    scale: scale ?? [1, 1, 1],
+    ...properties,
   };
 }
 
 // --------- --------- --------- SHAPE NODE --------- --------- ---------
 
 // TODO: more shapes!
-export type ShapeType = 'sphere'; // | box | ...etc
+export type Shape = { type: 'sphere'; radius: number } /* | box | torus | ...etc */;
 
 export interface ShapeNode extends SdfNode {
   type: 'shape';
-  shape: ShapeType;
+  shape: Shape;
+  translate?: vec3;
+  rotate?: vec3;
 }
 
-export interface SphereNode extends ShapeNode {
-  shape: 'sphere';
-  radius: number;
-}
-
-export function CreateSphereNode(radius: number): SphereNode {
-  return { type: 'shape', shape: 'sphere', radius };
+export function CreateSphereNode(
+  radius: number,
+  transform?: { translate?: vec3; rotate?: vec3 }
+): ShapeNode {
+  return { type: 'shape', shape: { type: 'sphere', radius }, ...transform };
 }
