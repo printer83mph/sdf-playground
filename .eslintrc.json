@@ -10,6 +10,7 @@
   ],
   "rules": {
     "import/order": ["warn", { "newlines-between": "always", "alphabetize": { "order": "asc" } }],
-    "unicorn/prevent-abbreviations": ["off"]
+    "unicorn/prevent-abbreviations": "off",
+    "no-console": "warn"
   }
 }

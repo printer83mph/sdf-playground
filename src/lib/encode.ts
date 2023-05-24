@@ -1,4 +1,4 @@
-import { mat4 } from 'gl-matrix'
+import { mat4 } from 'gl-matrix';
 
 import type {
   GroupNode,
@@ -8,7 +8,7 @@ import type {
   ShapeType,
   SphereNode,
   TransformNode,
-} from './sdf-node'
+} from './sdf-node';
 
 // prettier-ignore
 const endMarkerMat4 = mat4.fromValues(
@@ -19,9 +19,9 @@ const endMarkerMat4 = mat4.fromValues(
 )
 
 export default function encode(node: SdfNode) {
-  const matrices = (node as GroupNode).children.flatMap((child) => encodeMap[child.type](child))
-  matrices.push(endMarkerMat4)
-  return matrices
+  const matrices = (node as GroupNode).children.flatMap((child) => encodeMap[child.type](child));
+  matrices.push(endMarkerMat4);
+  return matrices;
 }
 
 // marker for when a group "begins"
@@ -49,11 +49,11 @@ const encodeMap: { [key in NodeType]: (node: SdfNode) => mat4[] } = {
       groupBeginMat4,
       ...(node as GroupNode).children.flatMap((child) => encodeMap[child.type](child)),
       groupEndMat4,
-    ]
+    ];
   },
   // transform: last index is 2
   transform: (node) => {
-    const { translate, rotate, scale } = node as TransformNode
+    const { translate, rotate, scale } = node as TransformNode;
     // prettier-ignore
     return [
       mat4.fromValues(
@@ -66,7 +66,7 @@ const encodeMap: { [key in NodeType]: (node: SdfNode) => mat4[] } = {
   },
   // shape: last index is 1
   shape: (node) => [encodeShapeMap[(node as ShapeNode).shape](node as ShapeNode)],
-}
+};
 
 const encodeShapeMap: { [key in ShapeType]: (node: ShapeNode) => mat4 } = {
   // sphere: 2nd to last index is 0
@@ -79,4 +79,4 @@ const encodeShapeMap: { [key in ShapeType]: (node: ShapeNode) => mat4 } = {
       0, 0, 0, 1,
     )
   },
-}
+};

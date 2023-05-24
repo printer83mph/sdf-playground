@@ -7,9 +7,9 @@ const nextConfig = {
     config.module.rules.push({
       test: /\.(frag|vert)$/,
       use: 'raw-loader',
-    })
-    return config
+    });
+    return config;
   },
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

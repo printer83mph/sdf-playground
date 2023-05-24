@@ -1,8 +1,8 @@
-'use client'
+'use client';
 
-import SdfCanvas from './sdf-canvas'
+import SdfCanvas from './sdf-canvas';
 
-import { CreateGroupNode, CreateSphereNode, CreateTransformNode } from '@/lib/sdf-node'
+import { CreateGroupNode, CreateSphereNode, CreateTransformNode } from '@/lib/sdf-node';
 
 export default function SdfEditor() {
   return (
@@ -22,5 +22,5 @@ export default function SdfEditor() {
         ]),
       ])}
     />
-  )
+  );
 }
