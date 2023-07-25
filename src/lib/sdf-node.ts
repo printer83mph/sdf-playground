@@ -2,16 +2,12 @@ import type { vec3 } from 'gl-matrix';
 
 export type NodeType = 'group' | 'transform' | 'shape';
 
-export interface SdfNode {
-  type: NodeType;
-}
-
 // TODO: more BlendModes
 export type BlendMode = { mode: 'union' } | { mode: 'intersect' };
 
 // --------- --------- --------- GROUP NODE --------- --------- ---------
 
-export interface GroupNode extends SdfNode {
+export interface GroupNode {
   type: 'group';
   children: SdfNode[];
   translate?: vec3;
@@ -36,7 +32,7 @@ export function CreateGroupNode(
 // TODO: more shapes!
 export type Shape = { type: 'sphere'; radius: number } /* | box | torus | ...etc */;
 
-export interface ShapeNode extends SdfNode {
+export interface ShapeNode {
   type: 'shape';
   shape: Shape;
   translate?: vec3;
@@ -49,3 +45,5 @@ export function CreateSphereNode(
 ): ShapeNode {
   return { type: 'shape', shape: { type: 'sphere', radius }, ...transform };
 }
+
+export type SdfNode = GroupNode | ShapeNode;
